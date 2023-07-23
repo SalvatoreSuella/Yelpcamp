@@ -15,20 +15,23 @@ module.exports.renderNewForm = (req, res) => {
 
 module.exports.createCampground = async (req, res, next) => {
 
+    //Naples                
+    const defaultGeoData = { type: 'Point', coordinates: [ 14.248783, 40.835934 ] };
+
     const geoData = await geocoder.forwardGeocode({
                         query: req.body.campground.location,
                         limit:1
-                    }).send()
-
-    
-    
+                    }).send();
+           
     const campground = new Campground(req.body.campground);
-    campground.geometry = geoData.body.features[0].geometry;
+    if(geoData.body.features.length > 0){campground.geometry = geoData.body.features[0].geometry;}
+    else{campground.geometry = defaultGeoData}
+
+
     campground.author = req.user.id;
-    console.log("***", req.files);
     campground.images = req.files.map( img => ({url: img.path, filename: img.filename}) )
     await campground.save();
-    console.log(campground);
+    //console.log(campground);
     req.flash("success", "Successfully made a new campground!");
     res.redirect(`/campgrounds/${campground.id}`);
 };
@@ -58,10 +61,20 @@ module.exports.renderEditForm = async (req, res, next) => {
 };
 
 module.exports.updateCampground = async (req, res, next) => {
+
+    const geoData = await geocoder.forwardGeocode({
+        query: req.body.campground.location,
+        limit:1
+    }).send()
+
     const {id} = req.params;
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground});
     const imgs = req.files.map( img => ({url: img.path, filename: img.filename}));
     campground.images.push(...imgs);
+
+    if(geoData.body.features.length > 0){campground.geometry = geoData.body.features[0].geometry;}
+    else{campground.geometry = defaultGeoData}
+
     await campground.save();
     if (req.body.deleteImages) {
         for (let filename of req.body.deleteImages) {
