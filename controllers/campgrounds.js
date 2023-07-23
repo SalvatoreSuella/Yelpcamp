@@ -15,8 +15,8 @@ module.exports.renderNewForm = (req, res) => {
 
 module.exports.createCampground = async (req, res, next) => {
 
-    //Naples                
-    const defaultGeoData = { type: 'Point', coordinates: [ 14.248783, 40.835934 ] };
+    // Naples                
+    // { type: 'Point', coordinates: [ 14.248783, 40.835934 ] };
 
     const geoData = await geocoder.forwardGeocode({
                         query: req.body.campground.location,
@@ -25,7 +25,7 @@ module.exports.createCampground = async (req, res, next) => {
            
     const campground = new Campground(req.body.campground);
     if(geoData.body.features.length > 0){campground.geometry = geoData.body.features[0].geometry;}
-    else{campground.geometry = defaultGeoData}
+    else{campground.geometry = { type: 'Point', coordinates: [ 14.248783, 40.835934 ] }}
 
 
     campground.author = req.user.id;
@@ -73,7 +73,7 @@ module.exports.updateCampground = async (req, res, next) => {
     campground.images.push(...imgs);
 
     if(geoData.body.features.length > 0){campground.geometry = geoData.body.features[0].geometry;}
-    else{campground.geometry = defaultGeoData}
+    else{campground.geometry = { type: 'Point', coordinates: [ 14.248783, 40.835934 ] }}
 
     await campground.save();
     if (req.body.deleteImages) {
